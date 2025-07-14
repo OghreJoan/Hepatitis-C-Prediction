@@ -146,20 +146,6 @@ Suspect Blood Donor (4)
 
 Note: The lower F1-scores for minority classes (Hepatitis, Fibrosis, Suspect Blood Donor) indicate areas for future improvement in correctly identifying these less frequent but clinically critical conditions.
 
-Setup and Local Run
-Follow these steps to set up and run the Hepatitis C Prediction application on your local machine.
-
-Prerequisites
-Python 3.x (Anaconda distribution is recommended)
-
-pip (Python package installer)
-
-Installation
-Clone the repository:
-
-git clone https://github.com/yourusername/Hepatitis-C-Prediction.git
-cd Hepatitis-C-Prediction/flaskapp_hepatitis
-
 Install dependencies:
 
 pip install -r requirements.txt
