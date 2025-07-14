@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hepatitis C Prediction</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and general body styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Full viewport height */
+            margin: 0;
+            padding: 1rem; /* Padding for mobile views */
+            box-sizing: border-box;
+        }
+        /* Styling for the message box/modal */
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50; /* Green for success */
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none; /* Allows clicks to pass through when hidden */
+        }
+        .message-box.error {
+            background-color: #f44336; /* Red for error */
+        }
+        .message-box.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Message Box for alerts -->
+    <div id="messageBox" class="message-box"></div>
+
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Hepatitis C Prediction</h1>
+
+        <div class="space-y-4">
+            <!-- Input for AST -->
+            <div>
+                <label for="ast" class="block text-sm font-medium text-gray-700 mb-1">AST (Aspartate Aminotransferase):</label>
+                <input type="number" id="ast" name="AST" step="0.1" placeholder="e.g., 60.0"
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <!-- Input for ALP -->
+            <div>
+                <label for="alp" class="block text-sm font-medium text-gray-700 mb-1">ALP (Alkaline Phosphatase):</label>
+                <input type="number" id="alp" name="ALP" step="0.1" placeholder="e.g., 100.0"
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <!-- Input for BIL -->
+            <div>
+                <label for="bil" class="block text-sm font-medium text-gray-700 mb-1">BIL (Bilirubin):</label>
+                <input type="number" id="bil" name="BIL" step="0.1" placeholder="e.g., 1.0"
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <!-- Input for CREA -->
+            <div>
+                <label for="crea" class="block text-sm font-medium text-gray-700 mb-1">CREA (Creatinine):</label>
+                <input type="number" id="crea" name="CREA" step="0.1" placeholder="e.g., 1.0"
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+        </div>
+
+        <!-- Prediction Button -->
+        <button id="predictButton"
+                class="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition ease-in-out duration-150 shadow-md">
+            Get Prediction
+        </button>
+
+        <!-- Prediction Result Display -->
+        <div id="predictionResult" class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-md text-center text-blue-800 font-semibold text-lg hidden">
+            <!-- Prediction will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Get references to HTML elements
+        const predictButton = document.getElementById('predictButton');
+        const predictionResultDiv = document.getElementById('predictionResult');
+        const messageBox = document.getElementById('messageBox');
+
+        // Function to show a temporary message (success or error)
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box show ${type}`; // Add 'show' and type class
+            setTimeout(() => {
+                messageBox.className = 'message-box'; // Hide after 3 seconds
+            }, 3000);
+        }
+
+        // Function to map numerical prediction to human-readable category
+        function getCategoryName(prediction) {
+            switch (prediction) {
+                case 0: return "Blood Donor";
+                case 1: return "Hepatitis";
+                case 2: return "Fibrosis";
+                case 3: return "Cirrhosis";
+                case 4: return "Suspect Blood Donor";
+                default: return "Unknown Category";
+            }
+        }
+
+        // Event listener for the prediction button click
+        predictButton.addEventListener('click', async () => {
+            // Get values from input fields
+            const ast = parseFloat(document.getElementById('ast').value);
+            const alp = parseFloat(document.getElementById('alp').value);
+            const bil = parseFloat(document.getElementById('bil').value);
+            const crea = parseFloat(document.getElementById('crea').value);
+
+            // Basic input validation
+            if (isNaN(ast) || isNaN(alp) || isNaN(bil) || isNaN(crea)) {
+                showMessage("Please enter valid numbers for all fields.", "error");
+                return; // Stop execution if validation fails
+            }
+
+            // Prepare data for the API request
+            const data = {
+                "AST": ast,
+                "ALP": alp,
+                "BIL": bil,
+                "CREA": crea
+            };
+
+            // Show a loading state (optional, but good for UX)
+            predictButton.textContent = 'Predicting...';
+            predictButton.disabled = true;
+            predictionResultDiv.classList.add('hidden'); // Hide previous result
+
+            try {
+                // Send data to your Flask API's /predict endpoint
+                const response = await fetch('/predict', { // Use relative path for local testing and deployment
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data) // Convert JavaScript object to JSON string
+                });
+
+                // Check if the response was successful (status code 2xx)
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                // Parse the JSON response
+                const result = await response.json();
+                const predictionValue = result.prediction;
+
+                // Display the prediction result
+                const categoryName = getCategoryName(predictionValue);
+                predictionResultDiv.textContent = `Prediction: ${categoryName}`;
+                predictionResultDiv.classList.remove('hidden'); // Show the result div
+                showMessage("Prediction successful!", "success");
+
+            } catch (error) {
+                console.error('Prediction error:', error);
+                predictionResultDiv.textContent = `Error: ${error.message}`;
+                predictionResultDiv.classList.remove('hidden'); // Show error message
+                showMessage(`Prediction failed: ${error.message}`, "error");
+            } finally {
+                // Reset button state
+                predictButton.textContent = 'Get Prediction';
+                predictButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# requirements.txt
+# This file lists all the Python packages required by your Flask application.
+# It's crucial for ensuring your environment can be replicated on any machine.
+
+flask          # Web framework for building the API
+pandas         # For data manipulation (e.g., creating DataFrames from input)
+numpy         # Often a dependency of pandas and scikit-learn
+scikit-learn   # The library that provides Logistic Regression (your model type)
+joblib         # For loading your serialized machine learning model (.pkl file)
+gunicorn      # A production-ready WSGI HTTP server (essential for deployment)
